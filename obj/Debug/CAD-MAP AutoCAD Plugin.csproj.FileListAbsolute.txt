@@ -1,0 +1,11 @@
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\bin\Debug\CAD-MAP AutoCAD Plugin.dll
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\bin\Debug\CAD-MAP AutoCAD Plugin.pdb
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin.csproj.AssemblyReference.cache
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin.csproj.CoreCompileInputs.cache
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin.dll
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin.pdb
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\GUI.g.cs
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin_MarkupCompile.cache
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin_MarkupCompile.lref
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\GUI.baml
+C:\Users\LeeTalman\source\repos\CAD-MAP AutoCAD Plugin\obj\Debug\CAD-MAP AutoCAD Plugin.g.resources
