@@ -128,11 +128,21 @@ namespace CAD_MAP_AutoCAD_Plugin
             {
                 CADMAP.ImportAllBlocks(connectionString);
             }
+            if (chkGroups.IsChecked == true)
+            {
+                CADMAP.ImportAllGroups(connectionString);
+            }
         }
 
         private void btnOverlapTest_Click(object sender, RoutedEventArgs e)
         {
             CADMAP.MTextExistsWithinBlock();
+        }
+
+        private void chkGroups_Checked(object sender, RoutedEventArgs e)
+        {
+            string connectionString = inputConnectionString.Text;
+            CADMAP.ImportAllGroups(connectionString);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Autodesk.AutoCAD.ApplicationServices;
@@ -12,6 +13,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Group = Autodesk.AutoCAD.DatabaseServices.Group;
 
 // This line is not mandatory, but improves loading performances
 [assembly: CommandClass(typeof(CAD_MAP_AutoCAD_Plugin.CADMAP))]
@@ -281,12 +283,12 @@ namespace CAD_MAP_AutoCAD_Plugin
                     {
                         MText mtext = trans.GetObject(objId, OpenMode.ForRead) as MText;
                         foreach (System.Data.DataRow row in csvTable.Rows)
+                        {
+                            if (row[0].ToString() == mtext.Text)
                             {
-                                if (row[0].ToString() == mtext.Text)
-                                {
-                                    mtextIds.Add(mtext);
-                                }
+                                mtextIds.Add(mtext);
                             }
+                        }
                     }
                 }
 
@@ -325,7 +327,7 @@ namespace CAD_MAP_AutoCAD_Plugin
                                 length = ext.MaxPoint.Y - ext.MinPoint.Y;
                                 foreach (MText mtext in mtextIds)
                                 {
-                                    if(CheckAxisAlignedBlockAndMTextOverlap(blk, mtext))
+                                    if (CheckAxisAlignedBlockAndMTextOverlap(blk, mtext))
                                     {
                                         label = mtext.Text;
                                         break;
@@ -526,6 +528,112 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
             return false;
+        }
+        public static void ImportAllGroups(string connectionString)
+        {
+            // Get the current document and database
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            Database db = doc.Database;
+
+            String sqlInsertQuery = @"INSERT INTO dbo.Groups (GroupName, Alpha, InsPtX, InsPtY, ExtX, ExtY, Rotation, Other, Created)
+                                       VALUES(@GroupName, @Alpha, @InsPtX, @InsPtY, @ExtX, @ExtY, @Rotation, @Other, @Created)";
+
+            //Regex to find alpha/EqNum
+            Regex rxAlpha = new Regex(@"[A-Z]{3}", RegexOptions.Compiled);
+            Regex rxEqNum = new Regex(@"(?<!\s)\S{6,}", RegexOptions.Compiled);
+
+            // Start a transaction
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                DBDictionary groups = trans.GetObject(db.GroupDictionaryId, OpenMode.ForRead) as DBDictionary;
+
+                foreach (DBDictionaryEntry entry in groups)
+                {
+                    Group group = (Group)trans.GetObject(entry.Value, OpenMode.ForRead);
+
+                    // Create a new Extents3d to hold the aggregate extents of all non-text and non-mtext objects in the group
+                    var groupExtents = new Extents3d();
+                    List<string> other = new List<string>();
+                    string alpha = "";
+                    //string eqNum = "";
+                    double rotation = 0.0;
+
+                    ObjectId[] ids = group.GetAllEntityIds();
+                    foreach (ObjectId id in ids)
+                    {
+
+                        if (id.ObjectClass.DxfName == "TEXT")
+                        {
+                            DBText text = trans.GetObject(id, OpenMode.ForRead) as DBText;
+                            ed.WriteMessage(group.Name + " contains the following potential labels: " + text.TextString + "\n");
+
+                            if (text.TextString.Length == 3 && rxAlpha.IsMatch(text.TextString))
+                            {
+                                alpha = text.TextString;
+                            }
+                            //else if (rxEqNum.IsMatch(text.TextString))
+                            //{
+                            //    eqNum = text.TextString;
+                            //}
+                            //else
+                            {
+                                other.Add(text.TextString);
+                            }
+                        }
+                        else if (id.ObjectClass.DxfName == "MTEXT")
+                        {
+                            var mtext = trans.GetObject(id, OpenMode.ForRead) as MText;
+                            ed.WriteMessage(group.Name + " contains the following potential labels: " + mtext.Contents + "\n");
+
+                            if (mtext.Contents.Length == 3 && rxAlpha.IsMatch(mtext.Contents))
+                            {
+                                alpha = mtext.Contents;
+                            }
+                            //else if (rxEqNum.IsMatch(mtext.Contents))
+                            //{
+                            //    eqNum = mtext.Contents;
+                            //}
+                            //else
+                            {
+                                other.Add(mtext.Contents);
+                            }
+                        }
+                        // @TODO: find out how to identify Insert base point before turning this back on
+                        //else if (id.ObjectClass.DxfName == "INSERT")
+                        //{
+                        //    BlockReference block = id.GetObject(OpenMode.ForRead) as BlockReference;
+                        //    groupExtents = block.GeometricExtents;
+                        //    rotation = block.Rotation * 57.2958;
+                        //}
+                        else
+                        {
+                            var ent = (Entity)id.GetObject(OpenMode.ForRead);
+                            groupExtents.AddExtents(ent.GeometricExtents);
+                        }
+                    }
+                    using (var sqlConnection = new SqlConnection(connectionString))
+                    {
+                        sqlConnection.Open();
+                        string joinedOther = "";
+                        joinedOther = String.Join(", ", other);
+                        SqlCommand cmd = new SqlCommand(sqlInsertQuery, sqlConnection);
+                        cmd.Parameters.AddWithValue("@GroupName", group.Name);
+                        cmd.Parameters.AddWithValue("@Alpha", alpha.Trim()); //Plant Sim doesn't support spaces in a name field
+                        //cmd.Parameters.AddWithValue("@EQNum", eqNum);
+                        cmd.Parameters.AddWithValue("@InsPtX", groupExtents.MinPoint.X + ((groupExtents.MaxPoint.X - groupExtents.MinPoint.X) / 2)); // AutoCAD gives bottom-left coords, Plant Sim uses center-point
+                        cmd.Parameters.AddWithValue("@InsPtY", groupExtents.MinPoint.Y + ((groupExtents.MaxPoint.Y - groupExtents.MinPoint.Y) / 2));
+                        cmd.Parameters.AddWithValue("@ExtX", (groupExtents.MaxPoint.X - groupExtents.MinPoint.X));
+                        cmd.Parameters.AddWithValue("@ExtY", (groupExtents.MaxPoint.Y - groupExtents.MinPoint.Y));
+                        cmd.Parameters.AddWithValue("@Rotation", rotation);
+                        cmd.Parameters.AddWithValue("@Other", joinedOther);
+                        cmd.Parameters.AddWithValue("@Created", DateTime.Now);
+                        cmd.ExecuteNonQuery();
+
+                        ed.WriteMessage(group.Name + " bounded by X = " + groupExtents.MinPoint.X + ", " + groupExtents.MaxPoint.X + ", Y = " + groupExtents.MinPoint.Y + ", " + groupExtents.MaxPoint.Y + "\n");
+                    }
+                }
+            }
         }
     }
 }
