@@ -3,46 +3,49 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CAD_MAP_AutoCAD_Plugin"
+        xmlns:local="clr-namespace:CAD_MAP_AutoCAD_Plugin" 
+        xmlns:controls="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         mc:Ignorable="d"
-        Title="CAD-MAP v3.0    |    Engineering Industries eXcellence (c) 2023" Height="720" Width="1277.8">
-    <Grid Margin="0,0,2,0">
-        <Button x:Name="btnConnectDB" Content="Connect DB" HorizontalAlignment="Left" Margin="1183,87,0,0" VerticalAlignment="Top" Width="75" Click="btnConnectDB_Click" Foreground="#FF0F0F0F">
+        Title="CAD-MAP v3.0    |    Engineering Industries eXcellence (c) 2023" Height="612" Width="720">
+    <Grid Margin="0,0,0,0">
+        <Button x:Name="btnConnectDB" Content="Connect DB" HorizontalAlignment="Left" Margin="625,270,0,0" VerticalAlignment="Top" Width="75" Click="BtnConnectDB_Click" Foreground="#FF0F0F0F">
             <Button.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
             </Button.Background>
         </Button>
 
-        <Button x:Name="btnClearDB" Content="Clear DB" HorizontalAlignment="Left" Margin="1023,87,0,0" VerticalAlignment="Top" Width="75" Click="btnClearDB_Click" Background="Red" Foreground="White"/>
-        <Label x:Name="labelConnectionString" Content="1. Enter the SQL connection string for your DB:" HorizontalAlignment="Left" Margin="798,17,0,0" VerticalAlignment="Top" FontSize="20" FontStyle="Italic" Width="460"/>
-        <Button x:Name="btnUploadFile" Content="Upload" HorizontalAlignment="Left" Margin="365,245,0,0" VerticalAlignment="Top" Width="75" Click="btnUploadFile_Click">
+        <Button x:Name="BtnClearDB" Content="Clear DB" HorizontalAlignment="Left" Margin="465,270,0,0" VerticalAlignment="Top" Width="75" Click="btnClearDB_Click" Background="Red" Foreground="White"/>
+        <Label x:Name="LabelConnectionString" Content="1. Enter the SQL connection string for your DB:" HorizontalAlignment="Left" Margin="10,200,0,0" VerticalAlignment="Top" FontSize="20" FontStyle="Italic" Width="460"/>
+        <Label x:Name="LabelFunctions" Content="2. Choose import options:" HorizontalAlignment="Left" Margin="13,302,0,0" VerticalAlignment="Top" FontSize="20" FontStyle="Italic" Width="232"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="125" Margin="10,344,0,0" Stroke="Black" VerticalAlignment="Top" Width="690" Panel.ZIndex="-1"/>
+        <TextBox x:Name="inputConnectionString" HorizontalAlignment="Right" Height="23" Margin="0,242,10,0" TextWrapping="Wrap" Text="Server=LAT-ENGUSA\SQLEXPRESS;Database=CADDB;Trusted_Connection=True;" VerticalAlignment="Top" Width="692" TextChanged="inputConnectionString_TextChanged"/>
+        <Button x:Name="BtnConfigureDB" Content="Configure DB" HorizontalAlignment="Left" Margin="545,270,0,0" VerticalAlignment="Top" Width="75" Click="btnConfigureDB_Click" Foreground="#FF0F0F0F">
             <Button.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
             </Button.Background>
         </Button>
-        <Label x:Name="labelUpload" Content="3. Upload a validation file (.csv only):" HorizontalAlignment="Left" Margin="10,233,0,0" VerticalAlignment="Top" FontSize="20" FontStyle="Italic" Width="350"/>
-        <Label x:Name="labelFunctions" Content="2. Select desired function(s):" HorizontalAlignment="Left" Margin="798,138,0,0" VerticalAlignment="Top" FontSize="20" FontStyle="Italic" Width="460"/>
-        <Label x:Name="labelImportAll" Content="Import All:" HorizontalAlignment="Left" Margin="798,185,0,0" VerticalAlignment="Top" Width="160" FontWeight="Bold" FontSize="20"/>
-        <CheckBox x:Name="chkTexts" Content="Texts" HorizontalAlignment="Left" Margin="821,232,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <CheckBox x:Name="chkMTexts" Content="MTexts" HorizontalAlignment="Left" Margin="821,260,0,0" VerticalAlignment="Top" FontSize="18" RenderTransformOrigin="0.667,0.565"/>
-        <CheckBox x:Name="chkLines" Content="Lines" HorizontalAlignment="Left" Margin="910,233,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <CheckBox x:Name="chkPolylines" Content="PolyLines" HorizontalAlignment="Left" Margin="910,261,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <CheckBox x:Name="chkBlocks" Content="Blocks" HorizontalAlignment="Left" Margin="1010,233,0,0" VerticalAlignment="Top" FontSize="18"/>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="73" Margin="805,227,0,0" Stroke="Black" VerticalAlignment="Top" Width="293" Panel.ZIndex="-1"/>
-        <TextBox x:Name="inputConnectionString" HorizontalAlignment="Right" Height="23" Margin="0,59,10,0" TextWrapping="Wrap" Text="Server=LAT-ENGUSA\SQLEXPRESS;Database=CADDB;Trusted_Connection=True;" VerticalAlignment="Top" Width="460" TextChanged="inputConnectionString_TextChanged"/>
-        <Button x:Name="btnConfigureDB" Content="Configure DB" HorizontalAlignment="Left" Margin="1103,87,0,0" VerticalAlignment="Top" Width="75" Click="btnConfigureDB_Click" Foreground="#FF0F0F0F">
-            <Button.Background>
-                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
-            </Button.Background>
-        </Button>
-        <Button x:Name="btnStartCADMAP" Content="Start CAD-MAP" HorizontalAlignment="Left" Margin="798,619,0,0" VerticalAlignment="Top" Width="460" Click="btnStartCADMAP_Click" Height="60" FontSize="24" Foreground="White">
+        <Button x:Name="BtnStartCADMAP" Content="Start CAD-MAP" HorizontalAlignment="Left" Margin="320,500,0,0" VerticalAlignment="Top" Width="380" Click="btnStartCADMAP_Click" Height="60" FontSize="24" Foreground="White">
             <Button.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
             </Button.Background>
         </Button>
-        <DataGrid x:Name="ImportDataGrid" HorizontalAlignment="Left" Height="404" Margin="10,275,0,0" VerticalAlignment="Top" Width="770" Panel.ZIndex="-2"/>
-        <Image x:Name="INDX_SPLASH" HorizontalAlignment="Left" Height="200" Margin="10,22,0,0" VerticalAlignment="Top" Width="770" Source="INDX_SPLASH.jpg"/>
-        <Button x:Name="btnOverlapTest" Content="OverlapTest" HorizontalAlignment="Left" Margin="805,320,0,0" VerticalAlignment="Top" Width="75" Click="btnOverlapTest_Click"/>
-        <CheckBox x:Name="chkGroups" Content="Groups" HorizontalAlignment="Left" Margin="1010,261,0,0" VerticalAlignment="Top" FontSize="18" IsChecked="True" Checked="chkGroups_Checked"/>
+        <Image x:Name="HeaderImage" HorizontalAlignment="Left" Height="170" Margin="10,10,0,0" VerticalAlignment="Top" Width="692" Source="INDX_SPLASH_2.png" Stretch="UniformToFill"/>
+        <RadioButton x:Name="RadioBtnImportAll" Content="All" HorizontalAlignment="Left" Margin="261,310,0,0" VerticalAlignment="Top" GroupName="ImportOptions" FontSize="18" IsChecked="True"/>
+        <RadioButton x:Name="RadioBtnImportSelected" Content="Selected" HorizontalAlignment="Left" Margin="320,310,0,0" VerticalAlignment="Top" GroupName="ImportOptions" FontSize="18"/>
+        <controls:UniformGrid Margin="0,0,12,112" Rows="2"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Bottom" Width="690" Height="125">
+            <CheckBox Grid.Column="1" Grid.Row="1" x:Name="ChkBoxLines" Content="Lines" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="2" Grid.Row="1" x:Name="ChkBoxPolyLines" Content="PolyLines" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="3" Grid.Row="1" x:Name="ChkBoxTexts" Content="Texts" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="1" Grid.Row="2" x:Name="ChkBoxMTexts" Content="MTexts" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="2" Grid.Row="2" x:Name="ChkBoxBlocks" Content="Blocks" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="3" Grid.Row="2" x:Name="ChkBoxGroups" Content="Groups" FontSize="20" Margin="5" Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center" IsChecked="True"/>
+        </controls:UniformGrid>
+        <controls:Button x:Name="BtnOverlapTest" Content="OverlapTest" HorizontalAlignment="Left" Margin="193,551,0,0" VerticalAlignment="Top" Width="87"/>
+        <controls:TextBlock x:Name="TxtBlkOverlapTest" HorizontalAlignment="Left" Margin="11,531,0,0" TextWrapping="Wrap" Text="Experimental: Check for overlap between MText and Block objects (not validated yet):" VerticalAlignment="Top" Width="287" Height="35" FontStyle="Italic"/>
+        <controls:Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Left" Height="45" Margin="465,415,0,0" VerticalAlignment="Top" Width="120"/>
+        <controls:TextBlock x:Name="TxtBlkOverlapTest_Copy" HorizontalAlignment="Left" Margin="10,474,0,0" TextWrapping="Wrap" Text="Required for Blocks - import .CSV with names equivalent to MTexts:" VerticalAlignment="Top" Width="287" Height="35" FontStyle="Italic"/>
+
     </Grid>
 </Window>

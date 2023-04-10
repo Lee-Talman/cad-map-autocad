@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Autodesk.AutoCAD.ApplicationServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using Group = Autodesk.AutoCAD.DatabaseServices.Group;
 
 // This line is not mandatory, but improves loading performances
@@ -23,7 +19,6 @@ namespace CAD_MAP_AutoCAD_Plugin
 
     class CADMAP
     {
-        public System.Data.DataTable localCSV = new System.Data.DataTable();
 
         [CommandMethod("CADMAP")]
         public void InitializeGUI()
@@ -46,11 +41,9 @@ namespace CAD_MAP_AutoCAD_Plugin
             }
             return coords;
         }
-        public static void ImportAllLines(string connectionString)
+
+        public static void ImportAllLines(string connectionString, bool selectAll, Document doc, Editor ed, Database db)
         {
-            // Get the Document and Editor object
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
 
             using (Transaction trans = doc.TransactionManager.StartTransaction())
             {
@@ -59,6 +52,12 @@ namespace CAD_MAP_AutoCAD_Plugin
                 SelectionFilter filter = new SelectionFilter(tv);
 
                 PromptSelectionResult promptSelectionResult = ed.SelectAll(filter);
+
+                if (selectAll == false)
+                {
+                    promptSelectionResult = ed.GetSelection(filter);
+                }
+
                 // Check if an object is selected
                 if (promptSelectionResult.Status == PromptStatus.OK)
                 {
@@ -110,11 +109,9 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
-        public static void ImportAllMTexts(string connectionString)
+
+        public static void ImportAllMTexts(string connectionString, bool selectAll, Document doc, Editor ed, Database db)
         {
-            // Get the Document and Editor object
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
 
             using (Transaction trans = doc.TransactionManager.StartTransaction())
             {
@@ -123,6 +120,12 @@ namespace CAD_MAP_AutoCAD_Plugin
                 SelectionFilter filter = new SelectionFilter(tv);
 
                 PromptSelectionResult promptSelectionResult = ed.SelectAll(filter);
+
+                if (selectAll == false)
+                {
+                    promptSelectionResult = ed.GetSelection(filter);
+                }
+
                 if (promptSelectionResult.Status == PromptStatus.OK)
                 {
                     double insPtX = 0.0, insPtY = 0.0;
@@ -175,15 +178,13 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
                 else
                 {
-                    ed.WriteMessage("No mtexts found.");
+                    ed.WriteMessage("No MTexts found.");
                 }
             }
         }
-        public static void ImportAllPolyLines(string connectionString)
+
+        public static void ImportAllPolyLines(string connectionString, bool selectAll, Document doc, Editor ed, Database db)
         {
-            // Get the Document and Editor object
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
 
             using (Transaction trans = doc.TransactionManager.StartTransaction())
             {
@@ -192,7 +193,12 @@ namespace CAD_MAP_AutoCAD_Plugin
                 SelectionFilter filter = new SelectionFilter(tv);
 
                 PromptSelectionResult promptSelectionResult = ed.SelectAll(filter);
-                // Check if an object is selected
+
+                if (selectAll == false)
+                {
+                    promptSelectionResult = ed.GetSelection(filter);
+                }
+
                 if (promptSelectionResult.Status == PromptStatus.OK)
                 {
                     string name = "";
@@ -238,310 +244,106 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
-        public static void ImportAllBlocks(string connectionString)
+
+        public static void ImportAllBlocks(string connectionString, bool selectAll, Document doc, Editor ed, Database db, bool filUploaded)
         {
-            var csvTable = new System.Data.DataTable();
+            bool fileUploaded = true;
 
-            // Start by getting the validation data CSV
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                var csvData = File.ReadAllLines(openFileDialog.FileName);
-
-                // Assume the first row contains the column names
-                var columns = csvData[0].Split(',');
-                foreach (var column in columns)
+                var csvTable = new System.Data.DataTable();
+                using (Transaction trans = doc.TransactionManager.StartTransaction())
                 {
-                    csvTable.Columns.Add(column);
-                }
-
-                // Add the remaining rows as data rows
-                for (int i = 1; i < csvData.Length; i++)
+                if (fileUploaded == true)
                 {
-                    var row = csvTable.NewRow();
-                    row.ItemArray = csvData[i].Split(',');
-                    csvTable.Rows.Add(row);
-                }
-            }
-
-
-
-            // Get the Document and Editor object
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-            Database db = doc.Database;
-
-            using (Transaction trans = doc.TransactionManager.StartTransaction())
-            {
-                List<MText> mtextIds = new List<MText>();
-                BlockTableRecord modelSpace = trans.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead) as BlockTableRecord;
-                foreach (ObjectId objId in modelSpace)
-                {
-                    if (objId.ObjectClass.DxfName == "MTEXT")
+                    List<MText> mtextIds = new List<MText>();
+                    BlockTableRecord modelSpace = trans.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead) as BlockTableRecord;
+                    foreach (ObjectId objId in modelSpace)
                     {
-                        MText mtext = trans.GetObject(objId, OpenMode.ForRead) as MText;
-                        foreach (System.Data.DataRow row in csvTable.Rows)
+                        if (objId.ObjectClass.DxfName == "MTEXT")
                         {
-                            if (row[0].ToString() == mtext.Text)
-                            {
-                                mtextIds.Add(mtext);
-                            }
-                        }
-                    }
-                }
-
-                TypedValue[] tv = new TypedValue[1];
-                tv.SetValue(new TypedValue((int)DxfCode.Start, "INSERT"), 0);
-                SelectionFilter filter = new SelectionFilter(tv);
-
-                PromptSelectionResult promptSelectionResult = ed.SelectAll(filter);
-                // Check if an object is selected
-                if (promptSelectionResult.Status == PromptStatus.OK)
-                {
-                    double insPtX = 0.0, insPtY = 0.0;
-                    string blkname = "";
-                    string layer = "";
-                    double rotation = 0.0, width = 0.0, length = 0.0;
-                    BlockReference blk;
-                    SelectionSet selectionSet = promptSelectionResult.Value;
-
-                    String sqlInsertQuery = @"INSERT INTO dbo.Blocks (InsPtX, InsPtY, BlockName, ExtX, ExtY, ExtXFromName, ExtYFromName, ExtXFromFile, ExtYFromFile, ExtZFromFile, Layer, Rotation, Label, Created)
-                                       VALUES(@InsPtX, @InsPtY, @BlockName, @ExtX, @ExtY, @ExtXFromName, @ExtYFromName, @ExtXFromFile, @ExtYFromFile, @ExtZFromFile, @Layer, @Rotation, @Label, @Created)";
-
-                    foreach (SelectedObject selectedObj in selectionSet)
-                    {
-                        //List<string> label = new List<string>();
-                        string label = "";
-                        double widthFromName = 0.0, lengthFromName = 0.0, widthFromFile = 0.0, lengthFromFile = 0.0, heightFromFile = 0.0;
-                        // string appended_label = "";
-                        blk = trans.GetObject(selectedObj.ObjectId, OpenMode.ForRead) as BlockReference;
-                        if (blk.AttributeCollection.Count >= 0 & !blk.Name.Contains("*"))
-                        {
-                            Extents3d? bounds = blk.Bounds;
-                            if (bounds.HasValue)
-                            {
-                                var ext = bounds.Value;
-                                width = ext.MaxPoint.X - ext.MinPoint.X;
-                                length = ext.MaxPoint.Y - ext.MinPoint.Y;
-                                foreach (MText mtext in mtextIds)
-                                {
-                                    if (CheckAxisAlignedBlockAndMTextOverlap(blk, mtext))
-                                    {
-                                        label = mtext.Text;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                width = 0.0;
-                                length = 0.0;
-                            }
-
-                            insPtX = blk.Position.X;
-                            insPtY = blk.Position.Y;
-                            blkname = blk.Name;
-                            layer = blk.Layer;
-                            rotation = blk.Rotation;
-                            //appended_label = string.Join(", ", label.ToArray());
-
+                            MText mtext = trans.GetObject(objId, OpenMode.ForRead) as MText;
                             foreach (System.Data.DataRow row in csvTable.Rows)
                             {
-                                if (row[0].ToString() == label)
+                                if (row[0].ToString() == mtext.Text)
                                 {
-                                    widthFromFile = Convert.ToDouble(row[1]);
-                                    lengthFromFile = Convert.ToDouble(row[2]);
-                                    heightFromFile = Convert.ToDouble(row[3]);
+                                    mtextIds.Add(mtext);
                                 }
                             }
-
-                            // @TODO: RegEx for Names requires refactor
-                            // @TODO: Underhang Label Strip for Blocks requires refactor
-
-                            using (var sqlConnection = new SqlConnection(connectionString))
-                            {
-                                sqlConnection.Open();
-                                SqlCommand cmd = new SqlCommand(sqlInsertQuery, sqlConnection);
-                                cmd.Parameters.AddWithValue("@InsPtX", insPtX);
-                                cmd.Parameters.AddWithValue("@InsPtY", insPtY);
-                                cmd.Parameters.AddWithValue("@BlockName", blkname);
-                                cmd.Parameters.AddWithValue("@ExtX", width);
-                                cmd.Parameters.AddWithValue("@ExtY", length);
-                                cmd.Parameters.AddWithValue("@ExtXFromName", widthFromName);
-                                cmd.Parameters.AddWithValue("@ExtYFromName", lengthFromName);
-                                cmd.Parameters.AddWithValue("@ExtXFromFile", widthFromFile);
-                                cmd.Parameters.AddWithValue("@ExtYFromFile", lengthFromFile);
-                                cmd.Parameters.AddWithValue("@ExtZFromFile", heightFromFile);
-                                cmd.Parameters.AddWithValue("@Layer", layer);
-                                cmd.Parameters.AddWithValue("@Rotation", rotation);
-                                cmd.Parameters.AddWithValue("@Label", label);
-                                cmd.Parameters.AddWithValue("@Created", DateTime.Now);
-                                cmd.ExecuteNonQuery();
-                            }
-
                         }
                     }
                 }
+
+                    TypedValue[] tv = new TypedValue[1];
+                    tv.SetValue(new TypedValue((int)DxfCode.Start, "INSERT"), 0);
+                    SelectionFilter filter = new SelectionFilter(tv);
+
+                    PromptSelectionResult promptSelectionResult = ed.SelectAll(filter);
+
+                    if (selectAll == false)
+                    {
+                        promptSelectionResult = ed.GetSelection(filter);
+                    }
+
+                    if (promptSelectionResult.Status == PromptStatus.OK)
+                    {
+                        double insPtX = 0.0, insPtY = 0.0;
+                        string blkname = "";
+                        string layer = "";
+                        double rotation = 0.0, width = 0.0, length = 0.0;
+                        BlockReference blk;
+                        SelectionSet selectionSet = promptSelectionResult.Value;
+
+                        String sqlInsertQuery = @"INSERT INTO dbo.Blocks (InsPtX, InsPtY, BlockName, ExtX, ExtY, ExtXFromName, ExtYFromName, ExtXFromFile, ExtYFromFile, ExtZFromFile, Layer, Rotation, Label, Created)
+                                       VALUES(@InsPtX, @InsPtY, @BlockName, @ExtX, @ExtY, @ExtXFromName, @ExtYFromName, @ExtXFromFile, @ExtYFromFile, @ExtZFromFile, @Layer, @Rotation, @Label, @Created)";
+
+                        foreach (SelectedObject selectedObj in selectionSet)
+                        {
+                            //List<string> label = new List<string>();
+                            string label = "";
+                            double widthFromName = 0.0, lengthFromName = 0.0, widthFromFile = 0.0, lengthFromFile = 0.0, heightFromFile = 0.0;
+                            // string appended_label = "";
+                            blk = trans.GetObject(selectedObj.ObjectId, OpenMode.ForRead) as BlockReference;
+                            if (blk.AttributeCollection.Count >= 0 & !blk.Name.Contains("*"))
+                            {
+                                Extents3d? bounds = blk.Bounds;
+                                if (bounds.HasValue)
+                                {
+                                    var ext = bounds.Value;
+                                    width = ext.MaxPoint.X - ext.MinPoint.X;
+                                    length = ext.MaxPoint.Y - ext.MinPoint.Y;
+                                    foreach (MText mtext in mtextIds)
+                                    {
+                                        if (CheckAxisAlignedBlockAndMTextOverlap(blk, mtext))
+                                        {
+                                            label = mtext.Text;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    width = 0.0;
+                                    length = 0.0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
                 else
                 {
                     ed.WriteMessage("No polylines found.");
                 }
             }
         }
-        public static System.Data.DataTable ImportValidationFile()
+
+        public static void ImportAllGroups(string connectionString, bool selectAll, Document doc, Editor ed, Database db)
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                var csvTable = new System.Data.DataTable();
-                var csvData = File.ReadAllLines(openFileDialog.FileName);
-
-                // Assume the first row contains the column names
-                var columns = csvData[0].Split(',');
-                foreach (var column in columns)
-                {
-                    csvTable.Columns.Add(column);
-                }
-
-                // Add the remaining rows as data rows
-                for (int i = 1; i < csvData.Length; i++)
-                {
-                    var row = csvTable.NewRow();
-                    row.ItemArray = csvData[i].Split(',');
-                    csvTable.Rows.Add(row);
-                }
-                return csvTable;
-
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static bool CheckAxisAlignedBlockAndMTextOverlap(BlockReference blockReference, MText mtext)
-        {
-            // Extents of Block and MText
-            Extents3d? blockBounds = blockReference.Bounds;
-            Extents3d? mtextBounds = mtext.Bounds;
-            var blockExt = blockBounds.Value;
-            var mtextExt = mtextBounds.Value;
-
-            // Rectangular overlap algorithm
-            var blockTopLeft = (blockExt.MinPoint.X, blockExt.MaxPoint.Y);
-            var blockBottomRight = (blockExt.MaxPoint.X, blockExt.MinPoint.Y);
-            var mtextTopLeft = (mtextExt.MinPoint.X, mtextExt.MaxPoint.Y);
-            var mtextBottomRight = (mtextExt.MaxPoint.X, mtextExt.MinPoint.Y);
-
-            if (blockTopLeft.X == blockBottomRight.X || blockTopLeft.Y == blockBottomRight.Y || mtextBottomRight.X == mtextTopLeft.X || mtextTopLeft.Y == mtextBottomRight.Y)
-            {
-                return false;
-            }
-
-            if (blockTopLeft.X > mtextBottomRight.X || mtextTopLeft.X > blockBottomRight.X)
-            {
-                return false;
-            }
-
-            if (blockBottomRight.Y > mtextTopLeft.Y || mtextBottomRight.Y > blockTopLeft.Y)
-            {
-                return false;
-            }
-
-            return true;
-
-        }
-        public static bool CheckIrregularBlockAndMTextOverlap(BlockReference blockReference, MText mtext)
-        {
-
-            return true;
-
-        }
-
-        public static bool MTextExistsWithinBlock()
-        {
-            // Get the Document and Editor object
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-            Database db = doc.Database;
-
-            using (Transaction trans = doc.TransactionManager.StartTransaction())
-            {
-                TypedValue[] tv = new TypedValue[1];
-                tv.SetValue(new TypedValue((int)DxfCode.Start, "INSERT"), 0);
-                SelectionFilter filter = new SelectionFilter(tv);
-
-                PromptSelectionResult promptSelectionResult = ed.GetSelection(filter);
-                // Check if an object is selected
-                if (promptSelectionResult.Status == PromptStatus.OK)
-                {
-                    BlockReference blockReference;
-                    SelectionSet selectionSet = promptSelectionResult.Value;
-
-                    foreach (SelectedObject selectedObj in selectionSet)
-                    {
-                        blockReference = trans.GetObject(selectedObj.ObjectId, OpenMode.ForRead) as BlockReference;
-                        Extents3d? blockBounds = blockReference.Bounds;
-                        if (blockBounds.HasValue)
-                        {
-                            var blockExt = blockBounds.Value;
-                            // Get all MTEXT objects in the document
-                            ObjectIdCollection mtextIds = new ObjectIdCollection();
-                            BlockTableRecord modelSpace = trans.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead) as BlockTableRecord;
-                            foreach (ObjectId objId in modelSpace)
-                            {
-                                if (objId.ObjectClass.DxfName == "MTEXT")
-                                {
-                                    MText mtext;
-                                    // Check if the MTEXT object is within the extents of the block object
-                                    mtext = trans.GetObject(objId, OpenMode.ForRead) as MText;
-                                    Extents3d? mtextBounds = mtext.Bounds;
-                                    if (mtextBounds.HasValue)
-                                    {
-                                        var mtextExt = mtextBounds.Value;
-                                        var blockTopLeft = (blockExt.MinPoint.X, blockExt.MaxPoint.Y);
-                                        var blockBottomRight = (blockExt.MaxPoint.X, blockExt.MinPoint.Y);
-                                        var mtextTopLeft = (mtextExt.MinPoint.X, mtextExt.MaxPoint.Y);
-                                        var mtextBottomRight = (mtextExt.MaxPoint.X, mtextExt.MinPoint.Y);
-
-                                        if (blockTopLeft.X > mtextBottomRight.X || mtextTopLeft.X > mtextBottomRight.X)
-                                        {
-                                            return false;
-                                        }
-
-                                        if (blockBottomRight.Y > mtextTopLeft.Y || mtextBottomRight.Y > blockTopLeft.Y)
-                                        {
-                                            return false;
-                                        }
-
-                                        System.Windows.MessageBox.Show(mtext.Text);
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-        public static void ImportAllGroups(string connectionString)
-        {
-            // Get the current document and database
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-            Database db = doc.Database;
-
             String sqlInsertQuery = @"INSERT INTO dbo.Groups (GroupName, Alpha, InsPtX, InsPtY, ExtX, ExtY, Rotation, Other, Created)
                                        VALUES(@GroupName, @Alpha, @InsPtX, @InsPtY, @ExtX, @ExtY, @Rotation, @Other, @Created)";
 
             //Regex to find alpha/EqNum
             Regex rxAlpha = new Regex(@"[A-Z]{3}", RegexOptions.Compiled);
-            Regex rxEqNum = new Regex(@"(?<!\s)\S{6,}", RegexOptions.Compiled);
+            // Regex rxEqNum = new Regex(@"(?<!\s)\S{6,}", RegexOptions.Compiled);
 
             // Start a transaction
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -634,6 +436,136 @@ namespace CAD_MAP_AutoCAD_Plugin
                     }
                 }
             }
+        }
+
+        public static System.Data.DataTable ImportValidationFile()
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                var csvTable = new System.Data.DataTable();
+                var csvData = File.ReadAllLines(openFileDialog.FileName);
+
+                // Assume the first row contains the column names
+                var columns = csvData[0].Split(',');
+                foreach (var column in columns)
+                {
+                    csvTable.Columns.Add(column);
+                }
+
+                // Add the remaining rows as data rows
+                for (int i = 1; i < csvData.Length; i++)
+                {
+                    var row = csvTable.NewRow();
+                    row.ItemArray = csvData[i].Split(',');
+                    csvTable.Rows.Add(row);
+                }
+                return csvTable;
+
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static bool CheckAxisAlignedBlockAndMTextOverlap(BlockReference blockReference, MText mtext)
+        {
+            // Extents of Block and MText
+            Extents3d? blockBounds = blockReference.Bounds;
+            Extents3d? mtextBounds = mtext.Bounds;
+            var blockExt = blockBounds.Value;
+            var mtextExt = mtextBounds.Value;
+
+            // Rectangular overlap algorithm
+            var blockTopLeft = (blockExt.MinPoint.X, blockExt.MaxPoint.Y);
+            var blockBottomRight = (blockExt.MaxPoint.X, blockExt.MinPoint.Y);
+            var mtextTopLeft = (mtextExt.MinPoint.X, mtextExt.MaxPoint.Y);
+            var mtextBottomRight = (mtextExt.MaxPoint.X, mtextExt.MinPoint.Y);
+
+            if (blockTopLeft.X == blockBottomRight.X || blockTopLeft.Y == blockBottomRight.Y || mtextBottomRight.X == mtextTopLeft.X || mtextTopLeft.Y == mtextBottomRight.Y)
+            {
+                return false;
+            }
+
+            if (blockTopLeft.X > mtextBottomRight.X || mtextTopLeft.X > blockBottomRight.X)
+            {
+                return false;
+            }
+
+            if (blockBottomRight.Y > mtextTopLeft.Y || mtextBottomRight.Y > blockTopLeft.Y)
+            {
+                return false;
+            }
+
+            return true;
+
+        }
+
+        public static bool MTextExistsWithinBlock(Document doc, Editor ed, Database db)
+        {
+
+            using (Transaction trans = doc.TransactionManager.StartTransaction())
+            {
+                TypedValue[] tv = new TypedValue[1];
+                tv.SetValue(new TypedValue((int)DxfCode.Start, "INSERT"), 0);
+                SelectionFilter filter = new SelectionFilter(tv);
+
+                PromptSelectionResult promptSelectionResult = ed.GetSelection(filter);
+                // Check if an object is selected
+                if (promptSelectionResult.Status == PromptStatus.OK)
+                {
+                    BlockReference blockReference;
+                    SelectionSet selectionSet = promptSelectionResult.Value;
+
+                    foreach (SelectedObject selectedObj in selectionSet)
+                    {
+                        blockReference = trans.GetObject(selectedObj.ObjectId, OpenMode.ForRead) as BlockReference;
+                        Extents3d? blockBounds = blockReference.Bounds;
+                        if (blockBounds.HasValue)
+                        {
+                            var blockExt = blockBounds.Value;
+                            // Get all MTEXT objects in the document
+                            ObjectIdCollection mtextIds = new ObjectIdCollection();
+                            BlockTableRecord modelSpace = trans.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead) as BlockTableRecord;
+                            foreach (ObjectId objId in modelSpace)
+                            {
+                                if (objId.ObjectClass.DxfName == "MTEXT")
+                                {
+                                    MText mtext;
+                                    // Check if the MTEXT object is within the extents of the block object
+                                    mtext = trans.GetObject(objId, OpenMode.ForRead) as MText;
+                                    Extents3d? mtextBounds = mtext.Bounds;
+                                    if (mtextBounds.HasValue)
+                                    {
+                                        var mtextExt = mtextBounds.Value;
+                                        var blockTopLeft = (blockExt.MinPoint.X, blockExt.MaxPoint.Y);
+                                        var blockBottomRight = (blockExt.MaxPoint.X, blockExt.MinPoint.Y);
+                                        var mtextTopLeft = (mtextExt.MinPoint.X, mtextExt.MaxPoint.Y);
+                                        var mtextBottomRight = (mtextExt.MaxPoint.X, mtextExt.MinPoint.Y);
+
+                                        if (blockTopLeft.X > mtextBottomRight.X || mtextTopLeft.X > mtextBottomRight.X)
+                                        {
+                                            return false;
+                                        }
+
+                                        if (blockBottomRight.Y > mtextTopLeft.Y || mtextBottomRight.Y > blockTopLeft.Y)
+                                        {
+                                            return false;
+                                        }
+
+                                        System.Windows.MessageBox.Show(mtext.Text);
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 }

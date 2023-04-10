@@ -1,28 +1,38 @@
-﻿using System;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Group = Autodesk.AutoCAD.DatabaseServices.Group;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
+using DataTable = System.Data.DataTable;
+using Exception = System.Exception;
 
 namespace CAD_MAP_AutoCAD_Plugin
 {
     public partial class GUI : Window
     {
         public SqlConnection sqlConnection = new SqlConnection(null);
+        public string connectionString = "";
 
         public GUI()
         {
             InitializeComponent();
         }
 
-        public void btnConnectDB_Click(object sender, RoutedEventArgs e)
+        public void BtnConnectDB_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Get the connection string from the TextBox control
-                string connectionString = inputConnectionString.Text;
+                connectionString = inputConnectionString.Text;
 
                 // Create a SqlConnection object with the connection string
                 sqlConnection = new SqlConnection(connectionString);
@@ -43,12 +53,12 @@ namespace CAD_MAP_AutoCAD_Plugin
             }
         }
 
-        public void btnConfigureDB_Click(object sender, RoutedEventArgs e)
+        public void BtnConfigureDB_Click(object sender, RoutedEventArgs e)
         {
-                System.Windows.MessageBox.Show("To Do: Set Up Automatic SQL DB configuration");
+            System.Windows.MessageBox.Show("To Do: Set Up Automatic SQL DB configuration");
         }
 
-        public void btnClearDB_Click(object sender, RoutedEventArgs e)
+        public void BtnClearDB_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -89,7 +99,7 @@ namespace CAD_MAP_AutoCAD_Plugin
             }
         }
 
-        private void btnUploadFile_Click(object sender, RoutedEventArgs e)
+        private void BtnUploadFile_Click(object sender, RoutedEventArgs e)
         {
             DataTable csvTable = CADMAP.ImportValidationFile();
             // Display the CSV data in a DataGrid control
@@ -99,50 +109,56 @@ namespace CAD_MAP_AutoCAD_Plugin
             }
             else
             {
-                ImportDataGrid.ItemsSource = csvTable.DefaultView;
                 System.Windows.MessageBox.Show("Import Successful!");
             }
         }
 
-        private void inputConnectionString_TextChanged(object sender, TextChangedEventArgs e)
+        private void BtnStartCADMAP_Click(object sender, RoutedEventArgs e)
         {
+        Document doc = Application.DocumentManager.MdiActiveDocument;
+        Editor ed = doc.Editor;
+        Database db = doc.Database;
 
-        }
+        bool selectAll = true;
+            if (RadioBtnImportAll.IsChecked == true)
+            {
+                selectAll = true;
+            }
+            else if (RadioBtnImportSelected.IsChecked == true)
+            {
+                selectAll = false;
+            }
 
-        private void btnStartCADMAP_Click(object sender, RoutedEventArgs e)
-        {
             string connectionString = inputConnectionString.Text;
-            if (chkLines.IsChecked == true)
+            if (ChkBoxLines.IsChecked == true)
             {
-                CADMAP.ImportAllLines(connectionString);
+                CADMAP.ImportAllLines(connectionString, selectAll, doc, ed, db);
             }
-            if (chkPolylines.IsChecked == true)
+            if (ChkBoxPolyLines.IsChecked == true)
             {
-                CADMAP.ImportAllPolyLines(connectionString);
+                CADMAP.ImportAllPolyLines(connectionString, selectAll, doc, ed, db);
             }
-            if (chkMTexts.IsChecked == true)
+            if (ChkBoxTexts.IsChecked == true)
             {
-                CADMAP.ImportAllMTexts(connectionString);
+                //CADMAP.ImportAllTexts(connectionString, selectAll, doc, ed, db);
             }
-            if (chkBlocks.IsChecked == true)
+            if (ChkBoxMTexts.IsChecked == true)
             {
-                CADMAP.ImportAllBlocks(connectionString);
+                CADMAP.ImportAllMTexts(connectionString, selectAll, doc, ed, db);
             }
-            if (chkGroups.IsChecked == true)
+            if (ChkBoxBlocks.IsChecked == true)
             {
-                CADMAP.ImportAllGroups(connectionString);
+                CADMAP.ImportAllBlocks(connectionString, selectAll, doc, ed, db);
+            }
+            if (ChkBoxGroups.IsChecked == true)
+            {
+                CADMAP.ImportAllGroups(connectionString, selectAll, doc, ed, db);
             }
         }
 
         private void btnOverlapTest_Click(object sender, RoutedEventArgs e)
         {
             CADMAP.MTextExistsWithinBlock();
-        }
-
-        private void chkGroups_Checked(object sender, RoutedEventArgs e)
-        {
-            string connectionString = inputConnectionString.Text;
-            CADMAP.ImportAllGroups(connectionString);
         }
     }
 }
