@@ -138,11 +138,5 @@ namespace CAD_MAP_AutoCAD_Plugin
         {
             CADMAP.MTextExistsWithinBlock();
         }
-
-        private void chkGroups_Checked(object sender, RoutedEventArgs e)
-        {
-            string connectionString = inputConnectionString.Text;
-            CADMAP.ImportAllGroups(connectionString);
-        }
     }
 }

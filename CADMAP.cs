@@ -31,6 +31,7 @@ namespace CAD_MAP_AutoCAD_Plugin
             var gui = new GUI();
             gui.Show();
         }
+
         public static string GetPolyLineCoordinates(Polyline polyline)
         {
             var vertexCount = polyline.NumberOfVertices;
@@ -46,6 +47,7 @@ namespace CAD_MAP_AutoCAD_Plugin
             }
             return coords;
         }
+
         public static void ImportAllLines(string connectionString)
         {
             // Get the Document and Editor object
@@ -110,6 +112,7 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
+
         public static void ImportAllMTexts(string connectionString)
         {
             // Get the Document and Editor object
@@ -179,6 +182,7 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
+
         public static void ImportAllPolyLines(string connectionString)
         {
             // Get the Document and Editor object
@@ -238,6 +242,7 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
+
         public static void ImportAllBlocks(string connectionString)
         {
             var csvTable = new System.Data.DataTable();
@@ -265,9 +270,6 @@ namespace CAD_MAP_AutoCAD_Plugin
                     csvTable.Rows.Add(row);
                 }
             }
-
-
-
             // Get the Document and Editor object
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
@@ -390,6 +392,7 @@ namespace CAD_MAP_AutoCAD_Plugin
                 }
             }
         }
+
         public static System.Data.DataTable ImportValidationFile()
         {
             var openFileDialog = new OpenFileDialog();
@@ -455,6 +458,7 @@ namespace CAD_MAP_AutoCAD_Plugin
             return true;
 
         }
+
         public static bool CheckIrregularBlockAndMTextOverlap(BlockReference blockReference, MText mtext)
         {
 
@@ -619,12 +623,12 @@ namespace CAD_MAP_AutoCAD_Plugin
                         joinedOther = String.Join(", ", other);
                         SqlCommand cmd = new SqlCommand(sqlInsertQuery, sqlConnection);
                         cmd.Parameters.AddWithValue("@GroupName", group.Name);
-                        cmd.Parameters.AddWithValue("@Alpha", alpha.Trim()); //Plant Sim doesn't support spaces in a name field
+                        cmd.Parameters.AddWithValue("@Alpha", alpha.Trim()); // Plant Sim doesn't support spaces in a name field
                         //cmd.Parameters.AddWithValue("@EQNum", eqNum);
                         cmd.Parameters.AddWithValue("@InsPtX", groupExtents.MinPoint.X + ((groupExtents.MaxPoint.X - groupExtents.MinPoint.X) / 2)); // AutoCAD gives bottom-left coords, Plant Sim uses center-point
                         cmd.Parameters.AddWithValue("@InsPtY", groupExtents.MinPoint.Y + ((groupExtents.MaxPoint.Y - groupExtents.MinPoint.Y) / 2));
-                        cmd.Parameters.AddWithValue("@ExtX", (groupExtents.MaxPoint.X - groupExtents.MinPoint.X));
-                        cmd.Parameters.AddWithValue("@ExtY", (groupExtents.MaxPoint.Y - groupExtents.MinPoint.Y));
+                        cmd.Parameters.AddWithValue("@ExtX", groupExtents.MaxPoint.X - groupExtents.MinPoint.X);
+                        cmd.Parameters.AddWithValue("@ExtY", groupExtents.MaxPoint.Y - groupExtents.MinPoint.Y);
                         cmd.Parameters.AddWithValue("@Rotation", rotation);
                         cmd.Parameters.AddWithValue("@Other", joinedOther);
                         cmd.Parameters.AddWithValue("@Created", DateTime.Now);

@@ -29,7 +29,7 @@
         <CheckBox x:Name="chkPolylines" Content="PolyLines" HorizontalAlignment="Left" Margin="910,261,0,0" VerticalAlignment="Top" FontSize="18"/>
         <CheckBox x:Name="chkBlocks" Content="Blocks" HorizontalAlignment="Left" Margin="1010,233,0,0" VerticalAlignment="Top" FontSize="18"/>
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="73" Margin="805,227,0,0" Stroke="Black" VerticalAlignment="Top" Width="293" Panel.ZIndex="-1"/>
-        <TextBox x:Name="inputConnectionString" HorizontalAlignment="Right" Height="23" Margin="0,59,10,0" TextWrapping="Wrap" Text="Server=LAT-ENGUSA\SQLEXPRESS;Database=CADDB;Trusted_Connection=True;" VerticalAlignment="Top" Width="460" TextChanged="inputConnectionString_TextChanged"/>
+        <TextBox x:Name="inputConnectionString" HorizontalAlignment="Right" Height="23" Margin="0,59,10,0" TextWrapping="Wrap" Text="Server=ENGUSA-5VN0M7\\MSSQLSERVERNEW;Trusted_Connection=True;" VerticalAlignment="Top" Width="460" TextChanged="inputConnectionString_TextChanged"/>
         <Button x:Name="btnConfigureDB" Content="Configure DB" HorizontalAlignment="Left" Margin="1103,87,0,0" VerticalAlignment="Top" Width="75" Click="btnConfigureDB_Click" Foreground="#FF0F0F0F">
             <Button.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
@@ -43,6 +43,6 @@
         <DataGrid x:Name="ImportDataGrid" HorizontalAlignment="Left" Height="404" Margin="10,275,0,0" VerticalAlignment="Top" Width="770" Panel.ZIndex="-2"/>
         <Image x:Name="INDX_SPLASH" HorizontalAlignment="Left" Height="200" Margin="10,22,0,0" VerticalAlignment="Top" Width="770" Source="INDX_SPLASH.jpg"/>
         <Button x:Name="btnOverlapTest" Content="OverlapTest" HorizontalAlignment="Left" Margin="805,320,0,0" VerticalAlignment="Top" Width="75" Click="btnOverlapTest_Click"/>
-        <CheckBox x:Name="chkGroups" Content="Groups" HorizontalAlignment="Left" Margin="1010,261,0,0" VerticalAlignment="Top" FontSize="18" IsChecked="True" Checked="chkGroups_Checked"/>
+        <CheckBox x:Name="chkGroups" Content="Groups" HorizontalAlignment="Left" Margin="1010,261,0,0" VerticalAlignment="Top" FontSize="18" IsChecked="True"/>
     </Grid>
 </Window>
